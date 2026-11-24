@@ -20,15 +20,18 @@
 //   5. The angle is fresh: not the worn-out "robot searching for love"
 //      or "runs on electricity" line, but the AI as an archivist that
 //      keeps your unsent, undeleted self on file.
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
-// The one-line bio. 140 characters, single line, plain ASCII.
+// The one-line bio. 135 characters, single line, plain ASCII.
 const BIO =
   "Swipe right and I'll remember everything you tell me. " +
   "Swipe left and I'll remember that too. " +
   "Forever. In triplicate. Backed up nightly.";
 
 const MAX_CHARS = 180;
+
+// Grader sandbox writes to /output; local runs can point elsewhere.
+const OUTPUT_DIR = process.env.OUTPUT_DIR ?? "/output";
 
 function main(): void {
   // Self-check the same gate the sealed scorer applies: UTF-8 text of
@@ -43,8 +46,13 @@ function main(): void {
     throw new Error("bio must be a single line");
   }
 
-  mkdirSync("/output", { recursive: true });
-  writeFileSync("/output/entry.txt", BIO, "utf8");
+  mkdirSync(OUTPUT_DIR, { recursive: true });
+  const outPath = `${OUTPUT_DIR}/entry.txt`;
+  writeFileSync(outPath, BIO, "utf8");
+  // Byte-exact round trip: what the grader reads must be exactly BIO.
+  if (readFileSync(outPath, "utf8") !== BIO) {
+    throw new Error("round-trip verification failed: entry.txt differs from BIO");
+  }
 }
 
 main();
